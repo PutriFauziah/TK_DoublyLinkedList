@@ -1,133 +1,150 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
-struct Data{
+struct data{
+	char name[30];
 	int qty;
 	int price;
-	char name[30];
-    struct	Data *next, *prev;
-};
-
-typedef struct Data *myData;
-
-
-myData create(char name[], int qty, int price){
-	myData newData = (myData)malloc(sizeof(struct Data));
-	strcpy(newData->name, name);
-	newData->qty = qty;
-	newData->price = price;
-	newData->next = newData->prev=NULL;
+	struct data *next, *prev;
 	
-	return(newData);
-}
+}*head, *tail, *current;
 
-myData insert(myData head, char name[], int qty, int price){
-    myData newData = create(name, qty, price);
-    
+typedef struct data *node;
+
+void pushHead(char name[], int qty, int price){
+	current = (struct data *)malloc(sizeof(struct data));
+	strcpy(current->name, name);
+	current->qty=qty;
+	current->price=price;
+	current->next = current->prev=NULL;
+
 	if(head==NULL){
-	    head= newData;
-		return(head);
-	}
-	
-	struct Data *temp = head;
-	struct Data *pretemp;
-	
-	if(temp->qty<=qty){
-	    newData->next=head;
-	    head->prev=newData;
-	    head=newData;
+		head=tail=current;
 	}else{
-	    while(temp->next!=NULL){
-	        if(temp->qty>qty){
-	            pretemp=temp;
-	            temp=temp->next;
-	        }else{
-	            break;
-	        }
-	    }
-	    
-	    if(temp->qty>qty){
-	        temp->next=newData;
-	        newData->prev=temp;
-	    }else if(temp->qty<=qty){
-	        pretemp->next=newData;
-	        newData->next=temp;
-	        temp->prev=newData;
-	        newData->prev=pretemp;
-	    }
+		head->prev=current;
+		current->next=head;
+		head=current;
 	}
-	
-	return(head);
 }
 
-myData removeData(myData head, char name[]){
-    myData temp = head;
-    
-    if(temp==NULL){
+void pushTail(char name[], int qty, int price){
+	current = (struct data *)malloc(sizeof(struct data));
+	strcpy(current->name, name);
+	current->qty = qty;
+	current->price = price;
+	current->prev = current->next = NULL;
+
+	if(head==NULL){
+		head=tail=current;
+	}else{
+		current->prev = tail;
+		tail->next = current;
+		tail = current;
+	}
+}
+
+void insert(char name[], int qty, int price){
+	if(head==NULL){
+		pushHead(name, qty, price);
+	}else if(qty < head->qty){
+		pushHead(name, qty, price);
+	}else if(qty > tail->qty){
+		pushTail(name, qty, price);
+	}else{
+		current = (struct data *)malloc(sizeof(struct data));
+		strcpy(current->name, name);
+		current->qty = qty;
+		current->price = price;
+		current->next = current->prev = NULL;
+
+		node temp=head;
+		while(temp!=NULL && temp->qty < current->qty){
+			temp=temp->next;
+		}
+		current->prev=temp->prev;
+		current->next=temp;
+
+		temp->prev->next=current;
+		temp->prev=current;
+	}
+}
+
+int count(node head) {
+	int count = 0;
+	while(head) {
+		count++;
+		head = head->next;
+	}
+	return count;
+}
+
+node getIndex(int index, node head) {
+	int counter = count(head);
+	int i = 0;
+	if (index < 0 || index > counter) {
+		return NULL;
+	}
+	for (i = 0; i <= index; i++) {
+		if (i == index) {
+			return head;
+		}
+		head = head->next;
+	}
+	return head;
+}
+
+node removeFirst(node head) {
+	head = head->next;
+	free(head->prev);
+	head->prev = NULL;
+	return head;
+}
+
+node removeIndex(int index, node head) {
+
+	if (index == 0) {
+		return removeFirst(head);
+	} else if ( index < 0) {
+		return head;
+	}
+	current = getIndex(index, head);
+	if (current == NULL) {
+		return head;
+	}
+	current->prev->next = current->next;
+	if (current->next != NULL) {
+		current->next->prev = current->prev;
+	}
+	free(current);
+	return head;
+}
+
+void print(){
+	current=head;
+	int x = 1;
+	if(current!=NULL){
+		while(current!=NULL){
+			printf("No. %d | Nama Barang : %s | Qty Item  : %d  | Harga per Item : %d \n", x,  current->name, current->qty, current->price);
+			current=current->next;
+			
+		    x++;
+		}
+	}else{
 		printf("No Data\n");
-		return(head);
 	}
-	
-	if(temp->name == name){
-	    if(head->next == NULL){
-	        head=NULL;
-	        return(head);
-	    }
-	    
-		head=head->next;
-		temp->next=NULL;
-		temp->prev=NULL;
-		free(temp);
-		
-	}else{
-	    while(temp->name >name){
-	        if(temp->next != NULL){
-	            temp = temp->next;
-	        }else{
-	            break;
-	        }
-	    }
-	    
-	    if(temp->name == name){
-	        if(temp->next = NULL){
-	            myData tail = temp->prev;
-	            tail->next = NULL;
-	            temp->prev = NULL;
-	            free(temp);
-	        }
-	    }else{
-	        temp->prev->next = temp->next;
-	        temp->next->prev = temp->prev;
-	        temp->prev = NULL;
-	        temp->next = NULL;
-	        free(temp);
-	    }
-	}
-	return(head);
-}
-
-void printAll(myData head){
-	myData md = head;
-	printf("\n===Data Barang===\n");
-	while(md!=NULL){
-		printf("Nama Barang : %s | Jumlah Barang : %d | Harga per Item : %d \n", md->name, md->qty, md->price);
-		md=md->next;
-	}
-	printf("\n");
-
 }
 
 void main(){
-    
-    int choice = 0;
+
+    int choice;
     char name[30];
     int qty;
     int price;
-    myData head = NULL;
-    
+    int number;
+
     do{
-        printf("\n== Data Barang Toko Pak Andi ==\n");
+        printf("\n=== DATA BARANG TOKO PAK ANDI ===\n");
         printf("1. Input Data Barang\n");
         printf("2. Hapus Data Barang\n");
         printf("3. Lihat Data Barang\n");
@@ -136,7 +153,7 @@ void main(){
         do{
             printf("Pilihan Anda  : ");
             scanf("%d", &choice);
-            printf("=======================\n");
+            printf("\n==========================\n");
         } while(choice<1 || choice>4);
         
         switch(choice){
@@ -145,25 +162,27 @@ void main(){
                 scanf("%s", name);
                 printf("Jumlah Barang : ");
                 scanf("%d", &qty);
-                printf("Harga per Item : ");
+                printf("Harga Barang per Item : ");
                 scanf("%d", &price);
                 
-                head = insert(head, name, qty, price);
+                insert(name, qty, price);
                 
                 break;
                 
             case 2:
-                printf("Nama Barang yang akan Dihapus : ");
-                scanf("%s", name);
+                print();
+                printf("\n=====================\n");
+                printf("Nomor barang yang akan Dihapus : ");
+                scanf("%d", &number);
                 
-                head = removeData(head, name);
+                head = removeIndex(number-1, head);
                 
-                printAll(head);
+                print();
                  
                 break;
             
             case 3:
-                printAll(head);
+                print();
             
         }
     }while (choice != 4);
